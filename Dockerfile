@@ -1,9 +1,8 @@
 FROM php:7.2.1-apache
-MAINTAINER Azure App Services Container Images <appsvc-images@microsoft.com>
+MAINTAINER snp-technologies
 
 COPY apache2.conf /bin/
 COPY init_container.sh /bin/
-COPY hostingstart.html /home/site/wwwroot/hostingstart.html
 
 RUN a2enmod rewrite expires include deflate
 
@@ -19,7 +18,15 @@ RUN apt-get update \
          libicu-dev \
          libgmp-dev \
          libmagickwand-dev \
-         openssh-server vim curl wget tcptraceroute \
+         openssh-server \
+                 curl \
+                 git \
+                 mysql-client \
+                 nano \
+                 sudo \
+                 tcptraceroute \
+                 vim \
+                 wget \
     && chmod 755 /bin/init_container.sh \
     && echo "root:Docker!" | chpasswd \
     && echo "cd /home" >> /etc/bash.bashrc \
@@ -30,23 +37,31 @@ RUN apt-get update \
     && pecl install imagick-beta \
     && pecl install mcrypt-1.0.1 \
     && docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
-    && docker-php-ext-install gd \
+    && docker-php-ext-install \
+         bcmath \
+         bz2 \
+         calendar \
+         exif \
+         gd \
+         gmp \
+         intl \
+         ldap \
+         mbstring \
          mysqli \
          opcache \
+         pcntl \
          pdo \
          pdo_mysql \
          pdo_pgsql \
-         pgsql \
-         ldap \
-         intl \
-         gmp \
+         pgsql \         
+         soap \
+         sockets \
+         xmlrpc \
          zip \
-         bcmath \
-         mbstring \
-         pcntl \
     && docker-php-ext-enable imagick \
     && docker-php-ext-enable mcrypt
-
+    
+### Change apache logs directory ###
 RUN   \
    rm -f /var/log/apache2/* \
    && rmdir /var/lock/apache2 \
@@ -57,12 +72,13 @@ RUN   \
    && chmod 777 /var/lock \
    && chmod 777 /bin/init_container.sh \
    && cp /bin/apache2.conf /etc/apache2/apache2.conf \
-   && rm -rf /var/www/html \
    && rm -rf /var/log/apache2 \
    && mkdir -p /home/LogFiles \
-   && ln -s /home/site/wwwroot /var/www/html \
    && ln -s /home/LogFiles /var/log/apache2 
 
+### Remove configuration files of the base image ###
+RUN rm -rf /etc/apache2/sites-enabled/* \
+   && rm -rf /etc/apache2/conf-enabled/*
 
 RUN { \
                 echo 'opcache.memory_consumption=128'; \
@@ -74,12 +90,18 @@ RUN { \
     } > /usr/local/etc/php/conf.d/opcache-recommended.ini
 
 RUN { \
-                echo 'error_log=/var/log/apache2/php-error.log'; \
-                echo 'display_errors=Off'; \
-                echo 'log_errors=On'; \
-                echo 'display_startup_errors=Off'; \
-                echo 'date.timezone=UTC'; \
-    } > /usr/local/etc/php/conf.d/php.ini
+  echo 'error_log=/var/log/apache2/php-error.log'; \
+  echo 'log_errors=On'; \
+  echo 'display_startup_errors=Off'; \
+  echo 'date.timezone=UTC'; \
+  echo 'session.cache_limiter = nocache'; \
+  echo 'session.auto_start = 0'; \
+  echo 'expose_php = off'; \
+  echo 'allow_url_fopen = off'; \
+  echo 'magic_quotes_gpc = off'; \
+  echo 'register_globals = off'; \
+  echo 'display_errors=Off'; \
+  } > /usr/local/etc/php/conf.d/php.ini
 
 COPY sshd_config /etc/ssh/
 
@@ -91,8 +113,31 @@ ENV PHP_VERSION 7.2.1
 ENV PORT 8080
 ENV WEBSITE_ROLE_INSTANCE_ID localRoleInstance
 ENV WEBSITE_INSTANCE_ID localInstance
-ENV PATH ${PATH}:/home/site/wwwroot
+ENV PATH ${PATH}:/var/www/html/
 
 WORKDIR /var/www/html
+## Put your code in the image, for example with git clone... ###
+RUN git clone -b master [REPLACE WITH YOUR GIT REPOSITORY CLONE URL] .
+
+# Add directories typically not included in the git repository
+# These are mounted from /home
+
+RUN mkdir -p  /home/site/wwwroot/wp-content/uploads/ \
+    && ln -s /home/site/wwwroot/wp-content/uploads  /var/www/html/docroot/wp-content/uploads \
+    && mkdir -p  /home/site/wwwroot/wp-content/backup-db/ \
+    && ln -s /home/site/wwwroot/wp-content/backup-db  /var/www/html/docroot/wp-content/backup-db \
+    && mkdir -p  /home/site/wwwroot/wp-content/backups/ \
+    && ln -s /home/site/wwwroot/wp-content/backups  /var/www/html/docroot/wp-content/backups \
+    && mkdir -p  /home/site/wwwroot/wp-content/blogs.dir/ \
+    && ln -s /home/site/wwwroot/wp-content/blogs.dir  /var/www/html/docroot/wp-content/blogs.dir \
+    && mkdir -p  /home/site/wwwroot/wp-content/cache/ \
+    && ln -s /home/site/wwwroot/wp-content/cache  /var/www/html/docroot/wp-content/cache \    
+    && mkdir -p  /home/site/wwwroot/wp-content/upgrade/ \
+    && ln -s /home/site/wwwroot/wp-content/upgrade  /var/www/html/docroot/wp-content/upgrade
+    
+WORKDIR /var/www/html/docroot
+RUN chown -R root:www-data .
+RUN find . -type d -exec chmod u=rwx,g=rx,o= '{}' \;
+RUN find . -type f -exec chmod u=rw,g=r,o= '{}' \;
 
 ENTRYPOINT ["/bin/init_container.sh"]
