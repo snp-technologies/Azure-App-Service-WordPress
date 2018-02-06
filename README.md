@@ -20,7 +20,7 @@ While it is possible to run WordPress websites with Azure App Service on Linux, 
 * Add more PHP extensions commonly used by WordPress sites
 * Add additional PHP configuration settings recommended for WordPress
 
-This repository is an example solution for WordPress. By itself, this solution does not install Drupal. *You need to bring your own code and database.* (More about this below.) 
+This repository is an example solution for WordPress. By itself, this solution does not install WordPress. *You need to bring your own code and database.* (More about this below.) 
 
 This repository is intended to satisfy common WordPress use cases. We expect that users of this solution will customize it to varying degrees to match their application requirements. For instance, we include many PHP extensions commonly required by WordPress, but you may need to add one or more (or remove ones that you do not need).
 
