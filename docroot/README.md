@@ -1,0 +1,1 @@
+Place your WordPress code in this directory.
