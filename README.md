@@ -35,6 +35,8 @@ Our initial, significant changes are seen in the commit [6c27d0f](https://github
 
 In the Dockerfile, there is a placeholder for your code: "[REPLACE WITH YOUR GIT REPOSITORY CLONE URL]". Alternatively, you can use the Docker COPY command to copy code from your local disk into the image.
 
+Our recommendation is to place your code in a directory directly off the root of the repository. In this repository we provide a ```docroot``` directory into which you can place your WordPress application code. In the Dockerfile, it is assumed that the application code is in the ```docroot``` directory. Feel free, of course, to rename the directory with your preferred naming convention.
+
 <a id="byo-database"></a>
 ## Bring your own database
 
@@ -107,6 +109,7 @@ RUN mkdir -p  /home/site/wwwroot/wp-content/uploads/ \
 * [Docker Hub Official Repository for php](https://hub.docker.com/r/_/php/)
 * [Web App for Containers home page](https://azure.microsoft.com/en-us/services/app-service/containers/)
 * [Use a custom Docker image for Web App for Containers](https://docs.microsoft.com/en-us/azure/app-service/containers/tutorial-custom-docker-image)
+* [Understanding the Azure App Service file system](https://github.com/projectkudu/kudu/wiki/Understanding-the-Azure-App-Service-file-system)
 * [Azure App Service on Linux FAQ](https://docs.microsoft.com/en-us/azure/app-service/containers/app-service-linux-faq)
 
 Git repository sponsored by [SNP Technologies](https://www.snp.com)
