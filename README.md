@@ -81,7 +81,7 @@ define('DB_PASSWORD', $wgDBpassword);
 <a id="files"></a>
 ## Persistent Files
 
-In order to persist files, we leverage the Web App's /home directory that is mounted to Azure File Storage.
+In order to persist files, we leverage the Web App's /home directory that is mounted to Azure File Storage (see NOTE below).
 The /home directory is accessible from the container. 
 As such, we persist files by making directories and then setting symbolic links, as follows:
 ```
@@ -102,6 +102,10 @@ RUN mkdir -p  /home/site/wwwroot/wp-content/uploads/ \
     && mkdir -p  /home/site/wwwroot/wp-content/upgrade/ \
     && ln -s /home/site/wwwroot/wp-content/upgrade  /var/www/html/docroot/wp-content/upgrade
 ```
+
+NOTE: By default, the Web App for Containers platform mounts an SMB share to the /home/ directory. You can do that by setting the `WEBSITES_ENABLE_APP_SERVICE_STORAGE` app setting to true or by removing the app setting entirely.
+
+If the `WEBSITES_ENABLE_APP_SERVICE_STORAGE` setting is false, the /home/ directory will not be shared across scale instances, and files that are written there will not be persisted across restarts.
 
 <a id="references"></a>
 ## References
